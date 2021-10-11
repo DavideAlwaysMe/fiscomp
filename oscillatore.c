@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#define ALGORITMI_NUM 4
 
 struct valori{
     double x;
@@ -9,6 +10,8 @@ struct valori{
 
 struct valori eulero(double dt, double omegaquadro, struct valori valori_n);
 struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n);
+struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n);
+struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n);
 
 int sceglialgoritmo();
 double energia(double m,double v,double k,double x);
@@ -21,41 +24,24 @@ int main() {
     double omegaquadro=k/m;
     FILE *fptr;
 
+    //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
+    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso};
 
     //quale algoritmo verrà utilizzato
     algoritmo=sceglialgoritmo();
 
-    //seleziona algoritmo e itera algoritmo npassi volte
-    switch (algoritmo){
-        case 0:
-            fptr=fopen("valori.dat","w+");
-            fprintf(fptr,"#t  x   v\n");
-            fprintf(fptr,"%lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v);
-            for(i=0;i<=npassi;i++){
-                //calcolo i valori con la funzione eulero
-                valori_n=eulero(dt,omegaquadro,valori_n);
-                energia_n=energia(m,valori_n.v,k,valori_n.x);
-                fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n);
-            }
-            fclose(fptr);
-            break;
-
-        case 1:
-            fptr=fopen("valori.dat","w+");
-            //aggiungere dettagli all'iniio del file
-            fprintf(fptr,"#t  x   v\n");
-            fprintf(fptr,"%lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v);
-            for(i=0;i<=npassi;i++){
-                //calcolo i valori con la funzione eulerocromer
-                valori_n=eulerocromer(dt,omegaquadro,valori_n);
-                energia_n=energia(m,valori_n.v,k,valori_n.x);
-                fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n);
-            }
-            fclose(fptr);
-            break;
+    //calcolo i valori di x, v e t con l'algoritmo scelto e salvo in un file di testo
+    fptr=fopen("valori.dat","w+");
+    fprintf(fptr,"#t         x         v         E\n");
+    energia_n=energia(m,valori_n.v,k,valori_n.x);
+    fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n);
+    for(i=0;i<=npassi;i++){
+        //calcolo i valori con la funzione prelevata dall'array algoritmi_lista
+        valori_n=(*algoritmo_lista[algoritmo])(dt,omegaquadro,valori_n);
+        energia_n=energia(m,valori_n.v,k,valori_n.x); //calcolo energia utilizzando la rispettiva energia
+        fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n); //stampo su un file t, x, v e energia
     }
-
-
+    fclose(fptr);
 }
 
 struct valori eulero(double dt, double omegaquadro, struct valori valori_n){
@@ -85,10 +71,40 @@ struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n
     return valori_new;
 }
 
+//TODO: scrivere algoritmo
+struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n){
+    struct valori valori_new;
+
+    //la nuova velocità viene calcolata utilizzando a=-omega^2*x
+    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+
+    //la nuova posizione viene calcolata utilizzando la velocità al passo n+1
+    valori_new.x=valori_n.x+valori_new.v*dt;
+
+    valori_new.t=valori_n.t+dt;
+    
+    return valori_new;
+}
+
+//TODO: scrivere algoritmo
+struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n){
+    struct valori valori_new;
+
+    //la nuova velocità viene calcolata utilizzando a=-omega^2*x
+    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+
+    //la nuova posizione viene calcolata utilizzando la velocità al passo n+1
+    valori_new.x=valori_n.x+valori_new.v*dt;
+
+    valori_new.t=valori_n.t+dt;
+    
+    return valori_new;
+}
+
 double energia(double m,double v,double k,double x){
     double e_potenziale,e_cinetica;
-    e_potenziale=1/2 * k * pow(x,2);
-    e_cinetica=1/2 * m * pow(v,2);
+    e_potenziale=1./2. * k * pow(x,2);
+    e_cinetica=1./2. * m * pow(v,2);
     return e_potenziale+e_cinetica;
 }
 
