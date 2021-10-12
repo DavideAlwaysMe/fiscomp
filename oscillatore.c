@@ -71,23 +71,21 @@ struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n
     return valori_new;
 }
 
-//TODO: scrivere algoritmo
-struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n){
+struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n){
     struct valori valori_new;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
     valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
 
-    //la nuova posizione viene calcolata utilizzando la velocità al passo n+1
-    valori_new.x=valori_n.x+valori_new.v*dt;
+    //la nuova posizione viene calcolata utilizzando la media tra la velocità al passo n e quella al passo n+1
+    valori_new.x=valori_n.x+(valori_new.v+valori_n.v)/2.*dt;
 
     valori_new.t=valori_n.t+dt;
     
     return valori_new;
 }
 
-//TODO: scrivere algoritmo
-struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n){
+struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n){
     struct valori valori_new;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
