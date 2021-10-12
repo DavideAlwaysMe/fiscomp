@@ -19,7 +19,7 @@ double energia(double m,double v,double k,double x);
 int main() {
     //dati iniziali da inserire: x0 v0 T dt k m
     struct valori valori_n={.x=5,.v=0,.t=0}; //posizione, velocità e tempo iniziale
-    double T=10, dt=0.01, k=30, m=10,npassi=T/dt,energia_n;
+    double T=10, dt=0.01, k=30, m=10,npassi=T/dt,energia_n,energia_0,energia_rapporto;
     int  i,algoritmo;
     double omegaquadro=k/m;
     FILE *fptr;
@@ -27,19 +27,27 @@ int main() {
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
     struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso};
 
+    //calcolo E(0)
+    energia_0=energia(m,valori_n.v,k,valori_n.x);
+
     //quale algoritmo verrà utilizzato
     algoritmo=sceglialgoritmo();
 
+    //se l'algoritmo è mezzopasso devo calcolare v(1/2) con eulero prima di eseguirlo
+    if(algoritmo==3){
+        valori_n.v=valori_n.v+0.5*(- omegaquadro*valori_n.x*dt);
+    }
+
     //calcolo i valori di x, v e t con l'algoritmo scelto e salvo in un file di testo
     fptr=fopen("valori.dat","w+");
-    fprintf(fptr,"#t         x         v         E\n");
-    energia_n=energia(m,valori_n.v,k,valori_n.x);
-    fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n);
+    fprintf(fptr,"#t         x         v         E        delta_E/E(0)\n");
+    fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_0);
     for(i=0;i<=npassi;i++){
         //calcolo i valori con la funzione prelevata dall'array algoritmi_lista
         valori_n=(*algoritmo_lista[algoritmo])(dt,omegaquadro,valori_n);
         energia_n=energia(m,valori_n.v,k,valori_n.x); //calcolo energia utilizzando la rispettiva energia
-        fprintf(fptr,"%lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n); //stampo su un file t, x, v e energia
+        energia_rapporto=(energia_n-energia_0)/energia_0;
+        fprintf(fptr,"%lf %lf %lf %lf %lf\n",valori_n.t,valori_n.x,valori_n.v,energia_n,energia_rapporto); //stampo su un file t, x, v e energia
     }
     fclose(fptr);
 }
