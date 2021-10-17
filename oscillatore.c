@@ -12,6 +12,9 @@ struct valori eulero(double dt, double omegaquadro, struct valori valori_n);
 struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n);
 struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n);
 struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n);
+//da fare quando aggiungo algoritmo: creare funzione, cambiare ALGORITMI_NUM e aggiungere il nome a nomi[]
+
+//void trovaperiodo()
 
 int sceglialgoritmo();
 double energia(double m,double v,double k,double x);
@@ -31,6 +34,7 @@ int main(int argc, char* argv[]) {
     FILE *fptr;
     //t x e v sono array dinamici nei quali vengono salvati i valori di t x e v
     double *t,*x,*v;
+    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto Centrale", "Mezzo Passo"}, nomefile[100];
 
     //assegno i parametri di esecuzione alle variabili iniziali
     valori_n.x=atof(argv[1]);
@@ -50,11 +54,14 @@ int main(int argc, char* argv[]) {
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
     struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso};
 
-    //calcolo E(0)
-    energia_0=energia(m,valori_n.v,k,valori_n.x);
-
     //quale algoritmo verrà utilizzato
     algoritmo=sceglialgoritmo();
+
+    //creo il nome del file in cui verranno salvati i valori
+    sprintf(nomefile,"%s_dt%g.dat",nomi[algoritmo],dt);
+
+    //calcolo E(0)
+    energia_0=energia(m,valori_n.v,k,valori_n.x);
 
     //se l'algoritmo è mezzopasso devo calcolare v(1/2) con eulero prima di eseguirlo
     if(algoritmo==3){
@@ -62,7 +69,7 @@ int main(int argc, char* argv[]) {
     }
 
     //calcolo i valori di x, v e t con l'algoritmo scelto e salvo in un file di testo
-    fptr=fopen("valori.dat","w+");
+    fptr=fopen(nomefile,"w+");
     fprintf(fptr,"#t         x         v         E        delta_E/E(0)\n");
     fprintf(fptr,"%g %g %g %g %g\n",tempo,valori_n.x,valori_n.v,energia_0,energia_rapporto);
     for(i=1;i<=npassi;i++){
