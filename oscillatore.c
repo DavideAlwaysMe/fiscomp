@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#define ALGORITMI_NUM 4
+#define ALGORITMI_NUM 6
 
 struct valori{
     double x;
@@ -13,7 +13,8 @@ struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n
 struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_n);
 struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n);
 struct valori verlet(double dt, double omegaquadro, struct valori valori_n, double x_old);
-//da fare quando aggiungo algoritmo: creare funzione, cambiare ALGORITMI_NUM e aggiungere il nome a nomi[]
+struct valori verletautosufficiente(double dt, double omegaquadro, struct valori valori_n);
+//da fare quando aggiungo algoritmo: creare funzione, cambiare ALGORITMI_NUM e aggiungere il nome a nomi[] e aggiungere in errore
 
 //void trovaperiodo()
 
@@ -21,9 +22,9 @@ double energia(double m,double v,double k,double x);
 
 int main(int argc, char* argv[]) {
 
-    if(argc!=8){
+    if(argc!=8 || atof(argv[7])<0 || atof(argv[7])>ALGORITMI_NUM){
         //Il programma eseguira tutti gli algoritmi e salverà i dati in %d file del tipo Eulero.dat.
-        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n");
+        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n");
         exit(1);
     }
 
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
     FILE *fptr;
     //t x e v sono array dinamici nei quali vengono salvati i valori di t x e v
     double *t,*x,*v;
-    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto_Centrale", "Mezzo_Passo","Verlet"}, nomefile[100];
+    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto_Centrale", "Mezzo_Passo","Verlet","Verlet_autosufficiente"}, nomefile[100];
 
     //assegno i parametri di esecuzione alle variabili iniziali
     valori_n.x=atof(argv[1]);
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
     t=(double*)malloc(sizeof(double)*npassi);
 
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
-    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso};
+    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente};
 
     //creo il nome del file in cui verranno salvati i valori
     sprintf(nomefile,"%s_dt%g.dat",nomi[algoritmo],dt);
@@ -75,7 +76,7 @@ int main(int argc, char* argv[]) {
     v[0]=valori_n.v;
     t[0]=0.;
 
-    if(algoritmo<4){
+    if(algoritmo!=4){
         //per i primi quattro algoritmi è sufficiente questo ciclo for che fa uso di un array di puntatori a funzione
         for(i=1;i<=npassi;i++){
             //calcolo i valori con la funzione prelevata dall'array algoritmi_lista
@@ -112,6 +113,8 @@ int main(int argc, char* argv[]) {
             v[i]=valori_n.v;
             t[i]=tempo;
         }
+    }else if(algoritmo==5){
+
     }
     fclose(fptr);
     return(0);
@@ -175,6 +178,16 @@ struct valori verlet(double dt, double omegaquadro, struct valori valori_n, doub
     valori_new.v=(x_futuro-x_old)/(2*dt);
     return valori_new;
 }
+
+struct valori verletautosufficiente(double dt, double omegaquadro, struct valori valori_n){
+    struct valori valori_new;
+
+    valori_new.x=valori_n.x+valori_n.v*dt-(0.5)*omegaquadro*valori_n.x*dt*dt;
+    valori_new.v=valori_n.v+((-omegaquadro*valori_n.x-omegaquadro*valori_new.x)/2.)*dt;
+    return valori_new;
+}
+
+
 
 double energia(double m,double v,double k,double x){
     double e_potenziale,e_cinetica;

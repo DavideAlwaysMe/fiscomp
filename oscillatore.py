@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-t,x,v,e,delta_E=np.loadtxt('Verlet_dt0.05.dat',unpack=True,usecols=(0,1,2,3,4))
+t,x,v,e,delta_E=np.loadtxt('Verlet_autosufficiente_dt0.05.dat',unpack=True,usecols=(0,1,2,3,4))
 
 #tempo e coordinata x
 plt.plot(t,x, color='g')
