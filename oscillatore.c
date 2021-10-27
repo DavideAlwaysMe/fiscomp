@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#define ALGORITMI_NUM 7
+#define ALGORITMI_NUM 8
 
 struct valori{
     double x;
     double v;
 };
+
+double phi(double,double);
 
 struct valori eulero(double dt, double omegaquadro, struct valori valori_n);
 struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n);
@@ -15,6 +17,7 @@ struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n);
 struct valori verlet(double dt, double omegaquadro, struct valori valori_n, double x_old);
 struct valori verletautosufficiente(double dt, double omegaquadro, struct valori valori_n);
 struct valori predcorr(double dt, double omegaquadro, struct valori valori_n, double x_old);
+struct valori rungekutta(double dt, double omegaquadro, struct valori valori_n);
 //da fare quando aggiungo algoritmo: creare funzione, cambiare ALGORITMI_NUM e aggiungere il nome a nomi[] e aggiungere in errore
 
 //void trovaperiodo()
@@ -25,7 +28,7 @@ int main(int argc, char* argv[]) {
 
     if(argc!=8 || atof(argv[7])<0 || atof(argv[7])>ALGORITMI_NUM){
         //Il programma eseguira tutti gli algoritmi e salverà i dati in %d file del tipo Eulero.dat.
-        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n6 Predizione Correzione\n");
+        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n6 Predizione Correzione\n7 Runge Kutta\n");
         exit(1);
     }
 
@@ -37,7 +40,7 @@ int main(int argc, char* argv[]) {
     FILE *fptr;
     //t x e v sono array dinamici nei quali vengono salvati i valori di t x e v
     double *t,*x,*v;
-    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto_Centrale", "Mezzo_Passo","Verlet","Verlet_autosufficiente","Predizione_correzione"}, nomefile[100];
+    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto_Centrale", "Mezzo_Passo","Verlet","Verlet_autosufficiente","Predizione_correzione","Runge_kutta"}, nomefile[100];
 
     //assegno i parametri di esecuzione alle variabili iniziali
     valori_n.x=atof(argv[1]);
@@ -56,7 +59,7 @@ int main(int argc, char* argv[]) {
     t=(double*)malloc(sizeof(double)*npassi);
 
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
-    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente};
+    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente,eulero,rungekutta};
 
     //creo il nome del file in cui verranno salvati i valori
     sprintf(nomefile,"%s_dt%g.dat",nomi[algoritmo],dt);
@@ -66,7 +69,7 @@ int main(int argc, char* argv[]) {
 
     //se l'algoritmo è mezzopasso devo calcolare v(1/2) con eulero prima di eseguirlo
     if(algoritmo==3){
-        valori_n.v=valori_n.v+0.5*(- omegaquadro*valori_n.x*dt);
+        valori_n.v=valori_n.v+0.5*(phi(omegaquadro,valori_n.x)*dt);
     }
 
     //calcolo i valori di x, v e t con l'algoritmo scelto e salvo in un file di testo
@@ -140,13 +143,20 @@ int main(int argc, char* argv[]) {
     return(0);
 }
 
+//funzione che calcola l'accelerazione
+double phi(double omegaquadro,double x){
+    double phi;
+    phi= -omegaquadro*x;
+    return phi;
+}
+
 struct valori eulero(double dt, double omegaquadro, struct valori valori_n){
     struct valori valori_new;
     //la nuova posizione viene calcolata utilizzando la velocità al passo n
     valori_new.x=valori_n.x+valori_n.v*dt;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
-    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x)*dt;
 
     return valori_new;
 }
@@ -155,7 +165,7 @@ struct valori eulerocromer(double dt, double omegaquadro, struct valori valori_n
     struct valori valori_new;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
-    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x)*dt;
 
     //la nuova posizione viene calcolata utilizzando la velocità al passo n+1
     valori_new.x=valori_n.x+valori_new.v*dt;
@@ -167,7 +177,7 @@ struct valori puntocentrale(double dt, double omegaquadro, struct valori valori_
     struct valori valori_new;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
-    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x)*dt;
 
     //la nuova posizione viene calcolata utilizzando la media tra la velocità al passo n e quella al passo n+1
     valori_new.x=valori_n.x+(valori_new.v+valori_n.v)/2.*dt;
@@ -179,7 +189,7 @@ struct valori mezzopasso(double dt, double omegaquadro, struct valori valori_n){
     struct valori valori_new;
 
     //la nuova velocità viene calcolata utilizzando a=-omega^2*x
-    valori_new.v=valori_n.v - omegaquadro*valori_n.x*dt;
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x)*dt;
 
     //la nuova posizione viene calcolata utilizzando la velocità al passo n+1
     valori_new.x=valori_n.x+valori_new.v*dt;
@@ -213,11 +223,25 @@ struct valori predcorr(double dt, double omegaquadro, struct valori valori_n, do
 
     //ho bisogno di x_old per calcolare un x(n+1) approssimativo per calcolare poi phi(n+1)
     x_futuro=x_old+2*valori_n.v*dt;
-    phi_new=-omegaquadro*x_futuro;
-    phi_n=-omegaquadro*valori_n.x;
+    phi_new=phi(omegaquadro,x_futuro);
+    phi_n=phi(omegaquadro,valori_n.x);
     
     valori_new.v=valori_n.v+((phi_new+phi_n)/2.)*dt;
     valori_new.x=valori_n.x+((valori_n.v+valori_new.v)/2.)*dt;
+    return valori_new;
+}
+
+struct valori rungekutta(double dt, double omegaquadro, struct valori valori_n){
+    struct valori valori_new;
+    double dx,dv;
+
+    dx=valori_n.v*dt;
+    dv=phi(omegaquadro,valori_n.x)*dt;
+
+    valori_new.x=valori_n.x+(valori_n.v+0.5*dv)*dt;
+
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x+0.5*dx)*dt;
+    
     return valori_new;
 }
 
