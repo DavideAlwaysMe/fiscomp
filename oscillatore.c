@@ -26,7 +26,7 @@ double energia(double m,double v,double k,double x);
 
 int main(int argc, char* argv[]) {
 
-    if(argc!=8 || atof(argv[7])<0 || atof(argv[7])>ALGORITMI_NUM){
+    if(argc!=8 || atof(argv[7])<0 || atof(argv[7])>=ALGORITMI_NUM){
         //Il programma eseguira tutti gli algoritmi e salverà i dati in %d file del tipo Eulero.dat.
         fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n6 Predizione Correzione\n7 Runge Kutta\n");
         exit(1);
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     FILE *fptr;
     //t x e v sono array dinamici nei quali vengono salvati i valori di t x e v
     double *t,*x,*v;
-    char  nomi[][50]={"Eulero", "Eulero-Cromer", "Punto_Centrale", "Mezzo_Passo","Verlet","Verlet_autosufficiente","Predizione_correzione","Runge_kutta"}, nomefile[100];
+    char  nomi[][50]={"eulero", "eulero-cromer", "punto_centrale", "mezzo_passo","verlet","verlet_autosufficiente","predizione_correzione","runge_kutta"}, nomefile[100];
 
     //assegno i parametri di esecuzione alle variabili iniziali
     valori_n.x=atof(argv[1]);
