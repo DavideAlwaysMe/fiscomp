@@ -32,9 +32,7 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-
-    //dati iniziali da inserire: x0 v0 T dt k m
-    struct valori valori_n; //posizione, velocità e tempo iniziale
+    struct valori valori_n; //posizione, velocità
     int  i,algoritmo;
     double tempo=0, T, dt, k, m,npassi,energia_n,energia_0,energia_rapporto=0.,omegaquadro;
     FILE *fptr;
@@ -57,6 +55,10 @@ int main(int argc, char* argv[]) {
     x=(double*)malloc(sizeof(double)*npassi);
     v=(double*)malloc(sizeof(double)*npassi);
     t=(double*)malloc(sizeof(double)*npassi);
+    if(t==NULL || x==NULL || v==NULL){
+        printf('Errore nella creazione degli array dinamici.\n')
+        exit(EXIT_FAILURE)
+    }
 
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
     struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente,eulero,rungekutta};
