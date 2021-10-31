@@ -11,6 +11,9 @@ struct valori{
 double phi(double,double);
 double energia(double m,double v,double l,double x);
 struct valori rungekutta(double dt, double coefficiente, struct valori valori_n);
+double trovaperiodo(double omega[],double t[],int npassi);
+double interpolazionelin(double y1,double y2,double x1, double x2,double xstar);
+double calcmedia(double array[],double dim);
 
 int main(int argc, char* argv[]){
 
@@ -90,9 +93,45 @@ struct valori rungekutta(double dt, double coefficiente, struct valori valori_n)
     return valori_new;
 }
 
+double trovaperiodo(double omega[],double t[],int npassi){
+    int i;
+    double semiperiodi[100],periodo,ultimo_tempo=0.,tempo; //da ritoccare la dimensione di semiperiodo
+
+    for(i=0;i<npassi;i++){
+        if(omega[i]*omega[i+1]<0){
+            //c'è stato un cambio di segno nella velocità
+            //devo interpolare per stimare il tempo in cui la velocità ha cambiato di segno
+            tempo=interpolazionelin(t[i],t[i+1],omega[i],omega[i+1],0.);
+            semiperiodi[i]=tempo-ultimo_tempo;
+            //la variabile ultimo_tempo contiene l'ultimo tempo in cui è stato misurato un cambio di direzione di omega
+            ultimo_tempo=tempo;
+        }
+    }
+    //calcolo la media dei semiperiodi e moltiplico per due
+    periodo=calcmedia(semiperiodi,npassi)*2;
+    return periodo;
+}
+
 double energia(double m,double omega,double l,double alfa){
     double e_potenziale,e_cinetica;
     e_potenziale=m*g*l*(1-cos(alfa));
     e_cinetica=(m*l*l)/2.*omega*omega;
     return e_potenziale+e_cinetica;
+}
+
+double interpolazionelin(double y1,double y2,double x1, double x2,double xstar){
+    double a,b,ystar;
+    a = y1-(y1-y2)/(x1-x2)*x1;
+    b = (y1-y2)/(x1-x2);
+    ystar= a + b * xstar;
+    return ystar;
+}
+
+double calcmedia(double array[],double dim){
+    int i;
+    double sum;
+    for(i=0;i<dim;i++){
+        sum+=array[i];
+    }
+    return sum/dim;
 }
