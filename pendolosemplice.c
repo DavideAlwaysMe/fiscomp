@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 
     struct valori valori_n; //posizione, velocità
     int  i;
-    double tempo=0, T, dt, l, m ,npassi,energia_n,energia_0,energia_rapporto=0.,coefficiente,periodo,periodoteorico;
+    double tempo=0, T, dt, l, m ,npassi,energia_n,energia_0,energia_rapporto=0.,coefficiente,periodo,periodoteorico,diff,diff_perc;
     FILE *fptr;
     double *alfa, *omega, *t;
     //assegno i parametri di esecuzione alle variabili iniziali
@@ -73,13 +73,15 @@ int main(int argc, char* argv[]){
     
     periodo=trovaperiodo(omega,t,npassi);
     periodoteorico=2*M_PI*sqrt(l/g);
-    printf("%lf",periodo-periodoteorico);
+    diff=periodo-periodoteorico;
+    diff_perc=(diff)/periodoteorico*100;
+    printf("periodo misurato: %lf periodo approssimato: %lf differenza percentuale: %lf\n",periodo,periodoteorico,diff_perc);
 }
 
 //funzione che calcola l'accelerazione
 double phi(double coefficiente,double alfa){
     double phi;
-    phi= -coefficiente*alfa;
+    phi= -coefficiente*sin(alfa);
     return phi;
 }
 
@@ -98,16 +100,16 @@ struct valori rungekutta(double dt, double coefficiente, struct valori valori_n)
 }
 
 double trovaperiodo(double omega[],double t[],int npassi){
-    int i,zericounter=0; //zericounter sarà il numero di zeri (quindi semiperiodi) trovati
-    double sumsemiperiodi,periodo,ultimo_tempo=0.,tempo; //da ritoccare la dimensione di semiperiodo
+    int i,zericounter=-1; //zericounter sarà il numero di zeri (quindi semiperiodi) trovati
+    double sumsemiperiodi=0,periodo,ultimo_tempo=0.,tempo;
 
     for(i=0;i<npassi;i++){
         if(omega[i]*omega[i+1]<0){
             //c'è stato un cambio di segno nella velocità
             //devo interpolare per stimare il tempo in cui la velocità ha cambiato di segno
             tempo=interpolazionelin(t[i],t[i+1],omega[i],omega[i+1],0.);
-            //considero il semiperiodo trovato solo se non è il primo 
-            if(zericounter!=0){
+            //considero il tempo trovato come un semiperiodo trovato solo se non è il primo 
+            if(zericounter!=-1){
                 sumsemiperiodi+=tempo-ultimo_tempo;
             }
             zericounter++;
