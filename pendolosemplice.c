@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 #define g 9.81
 
 struct valori{
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]){
 
     struct valori valori_n; //posizione, velocità
     int  i;
-    double tempo=0, T, dt, l, m ,npassi,energia_n,energia_0,energia_rapporto=0.,coefficiente;
+    double tempo=0, T, dt, l, m ,npassi,energia_n,energia_0,energia_rapporto=0.,coefficiente,periodo,periodoteorico;
     FILE *fptr;
     double *alfa, *omega, *t;
     //assegno i parametri di esecuzione alle variabili iniziali
@@ -69,7 +70,10 @@ int main(int argc, char* argv[]){
         omega[i]=valori_n.omega;
         t[i]=tempo;
     }
-
+    
+    periodo=trovaperiodo(omega,t,npassi);
+    periodoteorico=2*M_PI*sqrt(l/g);
+    printf("%lf",periodo-periodoteorico);
 }
 
 //funzione che calcola l'accelerazione
@@ -94,21 +98,25 @@ struct valori rungekutta(double dt, double coefficiente, struct valori valori_n)
 }
 
 double trovaperiodo(double omega[],double t[],int npassi){
-    int i;
-    double semiperiodi[100],periodo,ultimo_tempo=0.,tempo; //da ritoccare la dimensione di semiperiodo
+    int i,zericounter=0; //zericounter sarà il numero di zeri (quindi semiperiodi) trovati
+    double sumsemiperiodi,periodo,ultimo_tempo=0.,tempo; //da ritoccare la dimensione di semiperiodo
 
     for(i=0;i<npassi;i++){
         if(omega[i]*omega[i+1]<0){
             //c'è stato un cambio di segno nella velocità
             //devo interpolare per stimare il tempo in cui la velocità ha cambiato di segno
             tempo=interpolazionelin(t[i],t[i+1],omega[i],omega[i+1],0.);
-            semiperiodi[i]=tempo-ultimo_tempo;
+            //considero il semiperiodo trovato solo se non è il primo 
+            if(zericounter!=0){
+                sumsemiperiodi+=tempo-ultimo_tempo;
+            }
+            zericounter++;
             //la variabile ultimo_tempo contiene l'ultimo tempo in cui è stato misurato un cambio di direzione di omega
             ultimo_tempo=tempo;
         }
     }
     //calcolo la media dei semiperiodi e moltiplico per due
-    periodo=calcmedia(semiperiodi,npassi)*2;
+    periodo=(sumsemiperiodi/zericounter)*2;
     return periodo;
 }
 
