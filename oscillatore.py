@@ -105,6 +105,19 @@ plt.plot(t, x, color='b', label='x')
 # tempo e coordinata v
 plt.plot(t, v, color='c', label='v')
 plt.legend()
+plt.savefig('runge_kutta4.png', dpi=199)
+plt.clf()
+
+t, x, v, e, delta_E = np.loadtxt(
+    'runge_kutta4_dt0.01.dat', unpack=True, usecols=(0, 1, 2, 3, 4))
+plt.title('Runge Kutta al quarto ordine')
+plt.xlabel('t')
+plt.ylabel('x(t) e v(t)')
+# tempo e coordinata x
+plt.plot(t, x, color='b', label='x')
+# tempo e coordinata v
+plt.plot(t, v, color='c', label='v')
+plt.legend()
 plt.savefig('runge_kutta.png', dpi=199)
 plt.clf()
 

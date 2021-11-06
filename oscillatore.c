@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#define ALGORITMI_NUM 8
+#define ALGORITMI_NUM 9
 
 struct valori{
     double x;
@@ -18,6 +18,7 @@ struct valori verlet(double dt, double omegaquadro, struct valori valori_n, doub
 struct valori verletautosufficiente(double dt, double omegaquadro, struct valori valori_n);
 struct valori predcorr(double dt, double omegaquadro, struct valori valori_n, double x_old);
 struct valori rungekutta(double dt, double omegaquadro, struct valori valori_n);
+struct valori rungekutta4(double dt, double omegaquadro, struct valori valori_n);
 //da fare quando aggiungo algoritmo: creare funzione, cambiare ALGORITMI_NUM e aggiungere il nome a nomi[] e aggiungere in errore
 
 //void trovaperiodo()
@@ -28,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     if(argc!=8 || atof(argv[7])<0 || atof(argv[7])>=ALGORITMI_NUM){
         //Il programma eseguira tutti gli algoritmi e salverà i dati in %d file del tipo Eulero.dat.
-        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n6 Predizione Correzione\n7 Runge Kutta\n");
+        fprintf(stderr,"Per l\'esecuzione del programma è necessario passare come argomenti: x0, v0, dt, T, k, m, algoritmo.\nAlgoritmo è un numero intero, scegliere tra:\n0 Eulero\n1 Eulero-Cromer\n2 Punto centrale\n3 Mezzo passo\n4 Verlet\n5 Verlet autosufficiente\n6 Predizione Correzione\n7 Runge Kutta\n8 Runge Kutta al quarto ordine\n");
         exit(1);
     }
 
@@ -38,7 +39,7 @@ int main(int argc, char* argv[]) {
     FILE *fptr;
     //t x e v sono array dinamici nei quali vengono salvati i valori di t x e v
     double *t,*x,*v;
-    char  nomi[][50]={"eulero", "eulero-cromer", "punto_centrale", "mezzo_passo","verlet","verlet_autosufficiente","predizione_correzione","runge_kutta"}, nomefile[100];
+    char  nomi[][50]={"eulero", "eulero-cromer", "punto_centrale", "mezzo_passo","verlet","verlet_autosufficiente","predizione_correzione","runge_kutta","runge_kutta4"}, nomefile[100];
 
     //assegno i parametri di esecuzione alle variabili iniziali
     valori_n.x=atof(argv[1]);
@@ -56,12 +57,12 @@ int main(int argc, char* argv[]) {
     v=(double*)malloc(sizeof(double)*npassi);
     t=(double*)malloc(sizeof(double)*npassi);
     if(t==NULL || x==NULL || v==NULL){
-        printf('Errore nella creazione degli array dinamici.\n')
-        exit(EXIT_FAILURE)
+        printf("Errore nella creazione degli array dinamici.\n");
+        exit(EXIT_FAILURE);
     }
 
     //algoritmo_lista contiene i puntatori alle funzioni dei vari algoritmi
-    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente,eulero,rungekutta};
+    struct valori (*algoritmo_lista[ALGORITMI_NUM])(double dt, double omegaquadro, struct valori valori_n)={eulero,eulerocromer,puntocentrale,mezzopasso,eulero,verletautosufficiente,eulero,rungekutta,rungekutta4};
 
     //creo il nome del file in cui verranno salvati i valori
     sprintf(nomefile,"%s_dt%g.dat",nomi[algoritmo],dt);
@@ -243,6 +244,26 @@ struct valori rungekutta(double dt, double omegaquadro, struct valori valori_n){
     valori_new.x=valori_n.x+(valori_n.v+0.5*dv)*dt;
 
     valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x+0.5*dx)*dt;
+    
+    return valori_new;
+}
+
+struct valori rungekutta4(double dt, double omegaquadro, struct valori valori_n){
+    //DA CORREGGERE
+    struct valori valori_new;
+    double dx1,dx2,dx3,dx4,dv1,dv2,dv3,dv4;
+
+    dx1=valori_n.v*dt;
+    dv1=phi(omegaquadro,valori_n.x)*dt;
+    dx2=(valori_n.v+0.5*dv1)*dt;
+    dv2=phi(omegaquadro,(valori_n.x+0.5*dx1))*dt;
+    dx3=(valori_n.v+0.5*dv2)*dt;
+    dv3=phi(omegaquadro,(valori_n.x+0.5*dx2))*dt;
+    dx4=(valori_n.v+0.5*dv3)*dt;
+    dv4=phi(omegaquadro,(valori_n.x+0.5*dx3))*dt;
+
+    valori_new.x=valori_n.x+(valori_n.v+(1/6)*(dv1+2*dv2+2*dv3+dv4))*dt;
+    valori_new.v=valori_n.v + phi(omegaquadro,valori_n.x+(1/6)*(dx1+2*dx2+2*dx3+dx4))*dt;
     
     return valori_new;
 }
